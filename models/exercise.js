@@ -19,19 +19,19 @@ const exerciseSchema = new Schema(
         required: "Enter a duration"
     },
     weight: {
-        type: Number,
-        required: "Enter weight"
+        type: Number
     },
     reps: {
-        type: Number,
-        required: "Enter number of repetitions"
+        type: Number
     },
     sets: {
-        type: Number,
-        required: "Enter number of sets"
+        type: Number
+    },
+    distance: {
+        type: Number
     }
 });
 
-const Exercise = mongoose.model("Exercise", exercisechema);
+const Exercise = mongoose.model("Exercise", exerciseSchema);
 
 module.exports = Exercise;
