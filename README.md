@@ -2,7 +2,7 @@
 
 ![picture](public/assets/images/workoutTracker.png)
 
-[App Live on Heroku](https://)
+[App Live on Heroku](https://peaceful-dusk-42448.herokuapp.com/?id=5fe026173fc08b0f4fe3d5a9)
 
 ---
 
@@ -19,7 +19,7 @@
 
 ## Description
 
-The goal of this project is to create a burger logger with MySQL, Node, Express, Handlebars and a homemade ORM. Following the MVC design pattern, using Node and MySQL to query and route data in your app, and Handlebars to generate your HTML.
+The goal of this project is to create a workout tracker. This app will require to create Mongo database with a Mongoose schema and handle route with Express. The user will be able to create and tack daily workouts. Also It will be able to log multiple exercises in a workout on a given day. The user should also be able to track the name, type, weight, sets, reps, and duration of exercise. If the exercise is a cardio exercise, I should be able to track my distance traveled.
 
 #### Technologies
 
@@ -28,141 +28,132 @@ The goal of this project is to create a burger logger with MySQL, Node, Express,
 - Visual Studio Code
 - Node.js
 - Package.json
-- MySQL
+- Mongodb
 - Express
-- Handlebars
+- Mongoose
 
 ##### Code sample - JavaScript - Connection to a Databse 
 #
 
 ```js
-var mysql = require("mysql");
+const express = require("express");
+const mongoose = require("mongoose");
 
-// create the connection information for the sql database
-var connection = mysql.createConnection({
-  host: "localhost",
+const PORT = process.env.PORT || 3000;
 
-  // Your port; if not 3306
-  port: 3306,
+const app = express();
 
-  // Your username
-  user: "root",
 
-  // Your password
-  password: "********",
-  database: "burgers_db"
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+app.use(express.static("public"));
+
+mongoose.connect(process.env.MONGODB_URI || "mongodb://localhost/workout", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  useCreateIndex: true,
+  useFindAndModify: false
 });
 
+// routes
+app.use(require("./routes/api.js"));
+require("./routes/html-routes.js")(app);
 
-// connect to the mysql server and sql database
-connection.connect(function(err) {
-    if (err) throw err;
-    // run the start function after the connection is made to prompt the user
-    console.log("Connected as id " + connection.threadId + "\n");
+app.listen(PORT, () => {
+  console.log(`App running on port ${PORT}!`);
 });
-
-module.exports = connection;
 
 ```
 ##### Code sample - package.json
 #
 ```json
  {
-  "name": "burger",
+  "name": "mongoose_skeleton",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "watch": "nodemon server.js",
+    "seed": "node seeders/seed.js"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/CesarAugustoMartinez/Burger.git"
-  },
-  "author": "Cesar A Martinez",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/CesarAugustoMartinez/Burger/issues"
-  },
-  "homepage": "https://github.com/CesarAugustoMartinez/Burger#readme",
   "dependencies": {
-    "express": "^4.17.1",
-    "express-handlebars": "^5.2.0",
-    "mysql": "^2.18.1"
+    "express": "^4.16.3",
+    "mongoose": "^5.3.16",
+    "morgan": "^1.9.1"
   }
 }
 
 ```
 
-##### Code sample - javaScript - Functions to interact with the Database using orm.js
+##### Code sample - javaScript - Functions to interact with the Database using a model file
 #
 ```js
- var orm = {
-  selectAll: function(tableInput, cb) {
-    var queryString = "SELECT * FROM " + tableInput + ";";
-    connection.query(queryString, function(err, result) {
-      if (err) {
-        throw err;
-      }
-      cb(result);
-    });
+ const mongoose = require("mongoose");
+
+const Schema = mongoose.Schema;
+
+const workoutSchema = new Schema(
+{
+  day: {
+    type: Date,
+    default: Date.now,
+    required: "Date for workout must be entered"
   },
-  insertOne: function(table, cols, vals, cb) {
-    var queryString = "INSERT INTO " + table;
+  exercises: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Exercise"
+    }
+  ],
+  totalDuration: {
+    type: Number
+  }
+});
 
-    queryString += " (";
-    queryString += cols.toString();
-    queryString += ") ";
-    queryString += "VALUES (";
-    queryString += printQuestionMarks(vals.length);
-    queryString += ") ";
+const Workout = mongoose.model("Workout", workoutSchema);
 
-    console.log(queryString);
+module.exports = Workout;
 
-    connection.query(queryString, vals, function(err, result) {
-      if (err) {
-        throw err;
-      }
-
-      cb(result);
-    });
-  },
-
-```
----
-##### Code sample - Handelbars - burger-block.handlebars file
-#
-```handlebars
-<li class="list-group-item d-flex justify-content-between align-items-center">
-    {{burger_name}}
-    {{#if devoured}}
-    <button class="devourButton badge badge-primary badge-pill" id="devourButton" data-id="{{id}}" data-newdevour="{{devoured}}">Devour It!</button>
-    {{else}}
-    <span class="badge badge-primary badge-pill" data-id="{{id}}" data-newdevour="{{devoured}}">Devoured!</span>
-    {{/if}} 
-</li>
 ```
 ---
 ## How To Use
 
-This application is running on a webpage. It has a principal page where it lets users input the name of burgers they would like to eat. Whenever a user submits a burger's name, the app will display the burger name on the left side of the page, waiting to be devoured. Each burger in the waiting area also has a `Devour it!` button. When the user clicks it, the burger will move to the right side of the page. The app store all data in a database.
+This application is running on a webpage deployed on Heroku. When the user loads the page, they should be given the option to create a new workout or continue with their last workout.
+
+The user should be able to:
+
+  * Add exercises to the most recent workout plan.
+
+  * Add new exercises to a new workout plan.
+
+  * View the combined weight of multiple exercises from the past seven workouts on the `stats` page.
+
+  * View the total duration of each workout from the past seven workouts on the `stats` page.
 
 [Back To The Top](#Workout-Tracker)
  
 ## Screenshots
 
-- Waiting Bugers List. 
+- Add New Exercise form. 
 
-![picture](public/assets/images/waitingList.png)
+![picture](public/assets/images/addExercise.png)
 
-- Devoured Burger List. 
+- Resistance Exercise form. 
 
-![picture](public/assets/images/devouredList.png)
+![picture](public/assets/images/resistanceForm.png)
 
-- Form to enter the burger to be devoured and submit button.
+- Cardio Exercise form.
 
-![picture](public/assets/images/form.png)
+![picture](public/assets/images/cardioForm.png)
 
+- Dashboard.
+
+![picture](public/assets/images/dashboard.png)
 
 [Back To The Top](#Workout-Tracker)
 
@@ -175,8 +166,7 @@ This application is running on a webpage. It has a principal page where it lets 
 - Inquirer -- [Inquirer module](https://www.npmjs.com/package/inquirer)
 - Node.js -- [About Node.js](https://nodejs.org/en/)
 - json -- [The package.json guide](https://nodejs.dev/learn/the-package-json-guide)
-- Mysql -- [Mysql module](https://www.npmjs.com/package/mysql)
-- Handlebars -- [Handlebars.js module](https://www.npmjs.com/package/handlebars)
+- Mongodb -- [Mongodb](https://docs.mongodb.com/manual/reference/resource-document/)
 - Express -- [express module](https://www.npmjs.com/package/express)
 
 
